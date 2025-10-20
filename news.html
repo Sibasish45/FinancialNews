@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Pulse Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(79, 172, 254, 0.2);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .refresh-btn, .load-more-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #f5f5f5;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .refresh-btn:hover, .load-more-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .news-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .news-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border-color: rgba(79, 172, 254, 0.5);
+        }
+
+        /* Featured article styles */
+        .news-card.featured {
+            grid-column: span 2;
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+            border: 2px solid rgba(79, 172, 254, 0.3);
+        }
+
+        .news-card.featured .news-content {
+            padding: 35px;
+        }
+
+        .news-card.featured .news-title {
+            font-size: 2rem;
+            line-height: 1.3;
+            margin-bottom: 20px;
+        }
+
+        .news-card.featured .news-summary {
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+
+        .news-card.featured .news-meta {
+            padding-top: 20px;
+            margin-top: 25px;
+        }
+
+        .news-card.featured .news-date {
+            font-size: 1rem;
+        }
+
+        .news-card.featured .read-more {
+            font-size: 1.1rem;
+        }
+
+        .news-content {
+            padding: 25px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .news-title {
+            font-size: 1.4rem;
+            font-weight: 500;
+            margin-bottom: 15px;
+            line-height: 1.4;
+            color: #ffffff;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .news-summary {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #d0d0d0;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .news-date {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .read-more {
+            color: #4facfe;
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .read-more:hover {
+            color: #00f2fe;
+            gap: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 1.2rem;
+            color: #a0a0a0;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: #4facfe;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(255, 59, 48, 0.1);
+            border-left: 4px solid #ff3b30;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #ff9b93;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .news-count {
+            text-align: center;
+            margin: 30px 0;
+            font-size: 1rem;
+            color: #a0a0a0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            top: 70%;
+            left: 80%;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            width: 150px;
+            height: 150px;
+            top: 40%;
+            left: 70%;
+            animation-delay: 4s;
+        }
+
+        .shape:nth-child(4) {
+            width: 100px;
+            height: 100px;
+            top: 80%;
+            left: 20%;
+            animation-delay: 6s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .news-card.featured {
+                grid-column: span 1;
+            }
+            
+            .news-card.featured .news-title {
+                font-size: 1.6rem;
+            }
+            
+            .news-card.featured .news-summary {
+                font-size: 1rem;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Financial Pulse</h1>
+            <div class="controls">
+                <button class="refresh-btn" onclick="refreshNews()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button class="load-more-btn" onclick="loadMoreNews()">
+                    <i class="fas fa-plus-circle"></i> Load More
+                </button>
+            </div>
+        </header>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Fetching the latest financial news...</p>
+        </div>
+        <div id="error-container" class="error hidden"></div>
+        <div id="news-count" class="news-count hidden"></div>
+        <div id="news-container" class="news-grid"></div>
+    </div>
+
+    <script>
+        // API configuration
+        const API_KEYS = {
+            alphaVantage: 'WDHLLLWJ99JABKTQ',
+            polygon: 'kD9kVIqD9R4epUl3QgcYMvR5kniOhiim',
+            financialModellingPrep: 'HeRVjAS9fWH6J3rtMrl7LtXGQL8WNyUK',
+            twelveData: 'a4114485f79149efb45928e74a0b089c',
+            nasdaqData: 'XZ9bZGcbS9HotaSLCDXY'
+        };
+
+        // State management
+        let allNews = [];
+        let displayedNews = [];
+        let newsOffset = 0;
+        const NEWS_PER_LOAD = 30;
+        const MAX_NEWS_TO_FETCH = 1000;
+
+        // Fetch news from all sources
+        async function fetchNews() {
+            showLoading();
+            hideError();
+            
+            try {
+                const promises = [
+                    fetchAlphaVantageNews(),
+                    fetchPolygonNews(),
+                    fetchFMPNews(),
+                    fetchTwelveDataNews(),
+                    fetchNasdaqDataNews()
+                ];
+                
+                const results = await Promise.allSettled(promises);
+                allNews = [];
+                
+                results.forEach((result) => {
+                    if (result.status === 'fulfilled' && result.value && result.value.length > 0) {
+                        allNews.push(...result.value);
+                    } else {
+                        console.error('API failed:', result.reason);
+                    }
+                });
+                
+                // Remove duplicates based on title
+                allNews = removeDuplicates(allNews, 'title');
+                
+                // Sort by date (newest first)
+                allNews.sort((a, b) => new Date(b.time) - new Date(a.time));
+                
+                // Limit to max news to fetch
+                allNews = allNews.slice(0, MAX_NEWS_TO_FETCH);
+                
+                // Reset display state
+                newsOffset = 0;
+                displayedNews = [];
+                
+                // Display initial batch
+                loadMoreNews();
+                
+                // Update news count
+                updateNewsCount();
+            } catch (error) {
+                showError('Failed to fetch news. Please try again later.');
+                console.error('Error fetching news:', error);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Remove duplicates from array
+        function removeDuplicates(arr, key) {
+            return [...new Map(arr.map(item => [item[key], item])).values()];
+        }
+
+        // Display more news
+        function loadMoreNews() {
+            const container = document.getElementById('news-container');
+            
+            // Get next batch of news
+            const nextBatch = allNews.slice(newsOffset, newsOffset + NEWS_PER_LOAD);
+            
+            if (nextBatch.length === 0) {
+                if (allNews.length > 0) {
+                    showError('No more news articles available.');
+                }
+                return;
+            }
+            
+            // Add to displayed news
+            displayedNews = [...displayedNews, ...nextBatch];
+            newsOffset += NEWS_PER_LOAD;
+            
+            // Clear container if this is the first batch
+            if (displayedNews.length === nextBatch.length) {
+                container.innerHTML = '';
+            }
+            
+            // Add news cards
+            nextBatch.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'news-card';
+                
+                // Check if this is the first article (most recent)
+                if (item === allNews[0]) {
+                    card.classList.add('featured');
+                }
+                
+                const formattedDate = formatDate(item.time);
+                
+                card.innerHTML = `
+                    <div class="news-content">
+                        <h3 class="news-title">${item.title}</h3>
+                        <p class="news-summary">${item.summary || 'No summary available'}</p>
+                        <div class="news-meta">
+                            <div class="news-date">
+                                <i class="far fa-calendar-alt"></i>
+                                <span>${formattedDate}</span>
+                            </div>
+                            <a href="${item.url}" target="_blank" class="read-more">
+                                Read more <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            // Update news count
+            updateNewsCount();
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString(undefined, options);
+        }
+
+        // Refresh news (clear and reload)
+        function refreshNews() {
+            fetchNews();
+        }
+
+        // Update news count display
+        function updateNewsCount() {
+            const countElement = document.getElementById('news-count');
+            countElement.textContent = `Showing ${displayedNews.length} of ${allNews.length} articles`;
+            countElement.classList.remove('hidden');
+        }
+
+        // Fetch from Alpha Vantage
+        async function fetchAlphaVantageNews() {
+            try {
+                const url = `https://www.alphavantage.co/query?function=NEWS_SENTIMENT&apikey=${API_KEYS.alphaVantage}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.feed && data.feed.length > 0) {
+                    return data.feed.map(item => ({
+                        title: item.title,
+                        summary: item.summary,
+                        url: item.url,
+                        time: item.time_published
+                    }));
+                }
+            } catch (error) {
+                console.error('Alpha Vantage error:', error);
+            }
+            return [];
+        }
+
+        // Fetch from Polygon
+        async function fetchPolygonNews() {
+            try {
+                const url = `https://api.polygon.io/v2/reference/news?apiKey=${API_KEYS.polygon}&limit=1000`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    return data.results.map(item => ({
+                        title: item.title,
+                        summary: item.description,
+                        url: item.url,
+                        time: item.published_utc
+                    }));
+                }
+            } catch (error) {
+                console.error('Polygon error:', error);
+            }
+            return [];
+        }
+
+        // Fetch from Financial Modelling Prep
+        async function fetchFMPNews() {
+            try {
+                const url = `https://financialmodelingprep.com/api/v3/general_news?apikey=${API_KEYS.financialModellingPrep}&limit=100`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data && data.length > 0) {
+                    return data.map(item => ({
+                        title: item.title,
+                        summary: item.text,
+                        url: item.url,
+                        time: item.publishedDate
+                    }));
+                }
+            } catch (error) {
+                console.error('FMP error:', error);
+                
+                // Fallback to stock_news endpoint
+                try {
+                    const fallbackUrl = `https://financialmodelingprep.com/api/v3/stock_news?apikey=${API_KEYS.financialModellingPrep}&limit=100`;
+                    const fallbackResponse = await fetch(fallbackUrl);
+                    const fallbackData = await fallbackResponse.json();
+                    
+                    if (fallbackData && fallbackData.length > 0) {
+                        return fallbackData.map(item => ({
+                            title: item.title,
+                            summary: item.text,
+                            url: item.url,
+                            time: item.publishedDate
+                        }));
+                    }
+                } catch (fallbackError) {
+                    console.error('FMP fallback error:', fallbackError);
+                }
+            }
+            return [];
+        }
+
+        // Fetch from Twelve Data
+        async function fetchTwelveDataNews() {
+            try {
+                const symbols = [
+                    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'JPM', 'JNJ', 'V',
+                    'WMT', 'PG', 'MA', 'UNH', 'HD', 'BAC', 'XOM', 'PFE', 'CSCO', 'ADBE',
+                    'CRM', 'NFLX', 'ACN', 'KO', 'NKE', 'MRK', 'TMO', 'AVGO', 'LIN', 'ABT',
+                    'CVX', 'COST', 'LLY', 'MDT', 'VZ', 'ABBV', 'T', 'IBM', 'QCOM', 'NEE',
+                    'HON', 'ORCL', 'UNP', 'TXN', 'AMGN', 'CAT', 'DHR', 'MDLZ', 'PLD', 'UPS'
+                ];
+                
+                const promises = symbols.map(symbol => 
+                    fetch(`https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&apikey=${API_KEYS.twelveData}`)
+                        .then(response => response.json())
+                );
+                
+                const results = await Promise.allSettled(promises);
+                const newsItems = [];
+                
+                results.forEach((result, index) => {
+                    if (result.status === 'fulfilled' && result.value && result.value.values) {
+                        const data = result.value.values[0];
+                        if (data) {
+                            const symbol = symbols[index];
+                            const price = parseFloat(data.close).toFixed(2);
+                            const change = parseFloat(data.change).toFixed(2);
+                            const changePercent = parseFloat(data.percent_change).toFixed(2);
+                            
+                            newsItems.push({
+                                title: `${symbol} Market Update: ${change >= 0 ? '↑' : '↓'} ${Math.abs(changePercent)}%`,
+                                summary: `${symbol} closed at $${price} with a change of $${change} (${changePercent}%) today. Trading volume was ${data.volume} shares.`,
+                                url: `https://twelvedata.com/symbols/${symbol}`,
+                                time: data.datetime
+                            });
+                        }
+                    }
+                });
+                
+                return newsItems;
+            } catch (error) {
+                console.error('Twelve Data error:', error);
+            }
+            return [];
+        }
+
+        // Fetch from Nasdaq Data
+        async function fetchNasdaqDataNews() {
+            try {
+                const url = `https://data.nasdaq.com/api/v3/news?api_key=${API_KEYS.nasdaqData}&limit=100`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data && data.data && data.data.length > 0) {
+                    return data.data.map(item => ({
+                        title: item.title,
+                        summary: item.summary,
+                        url: item.url,
+                        time: item.published_at
+                    }));
+                }
+            } catch (error) {
+                console.error('Nasdaq Data error:', error);
+                
+                // Fallback: Using market data as news
+                try {
+                    const symbols = [
+                        'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'JPM', 'JNJ', 'V',
+                        'WMT', 'PG', 'MA', 'UNH', 'HD', 'BAC', 'XOM', 'PFE', 'CSCO', 'ADBE',
+                        'CRM', 'NFLX', 'ACN', 'KO', 'NKE', 'MRK', 'TMO', 'AVGO', 'LIN', 'ABT',
+                        'CVX', 'COST', 'LLY', 'MDT', 'VZ', 'ABBV', 'T', 'IBM', 'QCOM', 'NEE',
+                        'HON', 'ORCL', 'UNP', 'TXN', 'AMGN', 'CAT', 'DHR', 'MDLZ', 'PLD', 'UPS'
+                    ];
+                    
+                    const fallbackPromises = symbols.map(symbol => 
+                        fetch(`https://data.nasdaq.com/api/v3/datasets/WIKI/${symbol}.json?api_key=${API_KEYS.nasdaqData}&limit=1`)
+                            .then(response => response.json())
+                    );
+                    
+                    const fallbackResults = await Promise.allSettled(fallbackPromises);
+                    const newsItems = [];
+                    
+                    fallbackResults.forEach((result, index) => {
+                        if (result.status === 'fulfilled' && result.value && result.value.dataset && result.value.dataset.data) {
+                            const data = result.value.dataset.data[0];
+                            if (data) {
+                                const symbol = symbols[index];
+                                const date = data[0];
+                                const open = data[1];
+                                const high = data[2];
+                                const low = data[3];
+                                const close = data[4];
+                                const volume = data[5];
+                                
+                                const change = (close - open).toFixed(2);
+                                const changePercent = ((change / open) * 100).toFixed(2);
+                                
+                                newsItems.push({
+                                    title: `${symbol} Daily Report: ${change >= 0 ? '↑' : '↓'} ${Math.abs(changePercent)}%`,
+                                    summary: `${symbol} closed at $${close} on ${date}. Daily range: $${low} - $${high}. Volume: ${volume}.`,
+                                    url: `https://data.nasdaq.com/datasets/WIKI/${symbol}`,
+                                    time: date
+                                });
+                            }
+                        }
+                    });
+                    
+                    return newsItems;
+                } catch (fallbackError) {
+                    console.error('Nasdaq fallback error:', fallbackError);
+                }
+            }
+            return [];
+        }
+
+        // UI helper functions
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('news-container').innerHTML = '';
+            document.getElementById('news-count').classList.add('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        function showError(message) {
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.textContent = message;
+            errorContainer.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('error-container').classList.add('hidden');
+        }
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', fetchNews);
+    </script>
+</body>
+</html>
