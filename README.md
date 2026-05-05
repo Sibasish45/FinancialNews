@@ -8,7 +8,6 @@ The project demonstrates:
 -> Integration of third-party News APIs
 -> Fetching and handling JSON data
 -> Dynamic content rendering using JavaScript
--> Responsive web design using HTML and CSS
 -> API-based real-time data updates
 
 • Tech Stack
